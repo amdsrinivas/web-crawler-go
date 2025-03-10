@@ -20,6 +20,7 @@
 - Any type of writer to should implement the `Writer` interface.
 - `FileWriter` implements the logic to write the data to file system. Can be extended to any type of writer, say `KafkaWriter`.
 - Additionally, writers need to ensure to create the mapping file to keep track of the processed resources between runs.
+- `FileWriter` dumps the crawled data to `resources/` directory with a `<uuid>.txt` for each resource along with the mapping file.
 - `mappings.csv` file maintains the mapping of the persisted resource and the corresponding resource address.
 
 ### Usage
@@ -36,6 +37,11 @@ Usage of web-crawler-go:
         Header name for the data column in the source file (default "URL")
   -source_path string
         path to the resource list file (default "./urls.csv")
+```
+
+-Example: (crawled data will be available in the `resources` directory)
+```
+go run main.go -num_crawlers=20 -source_header_name=url_host_name -source_path=./dataset/sample_200.csv
 ```
 
 ### Additional features
