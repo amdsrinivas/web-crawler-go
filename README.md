@@ -1,9 +1,11 @@
 # web-crawler-go
 
+> Go based CLI app to crawl resources from various sources and persist. Currently, supports CSV source, HTTP resources and file based persistence. Built with extensibility to enable addition of different types of sources, resources and persistence layers.
+
 ### Stages
 
 #### Read stage
-- Reads the data into a channel.
+- Reads the records from source into a channel.
 - Any type of reader should implement the `Reader` interface.
 - Using interface, we can extend the application to different data sources, say `DatabaseReader` without changing the pipeline.
 
