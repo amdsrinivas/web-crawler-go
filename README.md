@@ -39,9 +39,8 @@ Usage of web-crawler-go:
 ### Additional features
 
 #### Shutdown
-- Support graceful shutdown of the system.
+- Supports graceful shutdown of the system.
 - Once an interrupt is triggered, stops spawning new goroutines and waits for the writes to complete and ensures all the crawls in progress are completed and no effort is wasted.
-- Caveats : 
 
 #### State management
 - Pipeline uses `mappings.csv` file to maintain the state between runs.
