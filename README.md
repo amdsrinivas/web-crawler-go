@@ -44,6 +44,22 @@ Usage of web-crawler-go:
 go run main.go -num_crawlers=20 -source_header_name=url_host_name -source_path=./dataset/sample_200.csv
 ```
 
+### Tests
+- From the root of the repository:
+```
+$ go test -cover ./...
+```
+
+#### Current coverage
+```
+        web-crawler-go          coverage: 0.0% of statements
+ok      web-crawler-go/crawler  3.100s  coverage: 90.3% of statements
+?       web-crawler-go/models   [no test files]
+ok      web-crawler-go/reader   0.006s  coverage: 94.8% of statements
+ok      web-crawler-go/utils    0.004s  coverage: 100.0% of statements
+ok      web-crawler-go/writer   0.005s  coverage: 89.5% of statements
+```
+
 ### Additional features
 
 #### Shutdown
@@ -90,11 +106,11 @@ Average response time:  24.841214062872485
 #####################################################
 ```
 
-### Caveats
+### Caveats/Assumptions
 - `HttpCrawler`'s current implementation does not honor the resource's `robots.txt` or set any standard headers.
 - Multiple interrupts are not handled and can lead to unwanted behaviour. Once interrupted, it is better not to interrupt again until it shuts down.
 - Logging can be improved to use a custom writer for `zerolog` logger to organize different levels of the log.
-- Few instances of type casting is not handled for errors.
+- The last entry the input file has to end with `\n`.
 
 ### Improvements
 - Create a docker image which mounts a volume and updates the file system with the resources.

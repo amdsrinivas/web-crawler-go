@@ -13,21 +13,36 @@ import (
 
 func getCsvReader(opts map[string]any) Reader {
 	// Default values
-	var dataValidatorFunc = func(_ string) bool { return true }
-	if opts["dataValidatorFunc"] != nil {
-		passedFunc, ok := opts["dataValidatorFunc"].(func(string) bool)
-		if ok {
-			dataValidatorFunc = passedFunc
-		} else {
-			log.Warn().Msg("dataValidatorFunc is not a function")
-		}
+	var dataValidatorFunc func(string) bool
+	passedFunc, ok := opts["dataValidatorFunc"].(func(string) bool)
+	if ok {
+		dataValidatorFunc = passedFunc
+	} else {
+		log.Warn().Msg("dataValidatorFunc is not a function")
 	}
-	// TODO : CHORE - handle casting errors.
+
+	readFilepath, ok := opts["readFilepath"].(string)
+	if !ok {
+		log.Warn().Any("opts", opts).Msg("Invalid opts")
+		readFilepath = "./urls.csv"
+	}
+
+	headerName, ok := opts["headerName"].(string)
+	if !ok {
+		log.Warn().Any("opts", opts).Msg("Invalid opts")
+		headerName = "URL"
+	}
+
+	mappings, ok := opts["mappings"].(*hashset.Set)
+	if !ok {
+		log.Warn().Any("opts", opts).Msg("Invalid opts")
+	}
+
 	return CsvReader{
-		readFilePath:      opts["readFilepath"].(string),
-		headerName:        opts["headerName"].(string),
+		readFilePath:      readFilepath,
+		headerName:        headerName,
 		dataValidator:     dataValidatorFunc,
-		processedMappings: opts["mappings"].(*hashset.Set),
+		processedMappings: mappings,
 	}
 }
 
@@ -42,7 +57,7 @@ func (readerInstance CsvReader) ReadUrlFromSource(outChan chan *models.Resource)
 	csvFile, err := os.Open(readerInstance.readFilePath)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to open source file")
+		log.Error().Err(err).Msg("failed to open source file")
 		close(outChan)
 		return
 	}
@@ -53,13 +68,13 @@ func (readerInstance CsvReader) ReadUrlFromSource(outChan chan *models.Resource)
 	var dataIndex, currentLine int
 	for {
 		line, err := fileReader.ReadString('\n')
-		line = strings.Trim(line, "\r\n")
 		if err == io.EOF {
 			if currentLine == 0 {
 				log.Debug().Str("file", readerInstance.readFilePath).Msg("empty source file")
 			}
 			break
 		}
+		line = strings.Trim(line, "\r\n")
 		currentLine = currentLine + 1
 
 		// Process the header line. Assumes only one header line.
@@ -83,12 +98,12 @@ func (readerInstance CsvReader) ReadUrlFromSource(outChan chan *models.Resource)
 		}
 
 		columnData := lineData[dataIndex]
-		if readerInstance.processedMappings.Contains(columnData) {
+		if readerInstance.processedMappings != nil && readerInstance.processedMappings.Contains(columnData) {
 			log.Info().Str("url", columnData).Msg("data already processed. skipping.")
 			continue
 		}
 
-		if !readerInstance.dataValidator(columnData) {
+		if readerInstance.dataValidator != nil && !readerInstance.dataValidator(columnData) {
 			// Log malformed data.
 			log.Info().Str("url", columnData).Msg("data validation failed. skipping.")
 			continue

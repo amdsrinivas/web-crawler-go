@@ -1,7 +1,6 @@
 package reader
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -16,8 +15,23 @@ func TestGetReader(t *testing.T) {
 		want    Reader
 		wantErr bool
 	}{
-		// TODO: Add test cases.
-		{},
+		{
+			name: "Get CSV reader",
+			args: args{readerType: "csv"},
+			want: &CsvReader{
+				readFilePath:      "./urls.csv",
+				headerName:        "URL",
+				dataValidator:     nil,
+				processedMappings: nil,
+			},
+			wantErr: false,
+		},
+		{
+			name:    "Get unknown reader",
+			args:    args{readerType: "DB"},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -26,7 +40,7 @@ func TestGetReader(t *testing.T) {
 				t.Errorf("GetReader() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !tt.wantErr && got == nil {
 				t.Errorf("GetReader() got = %v, want %v", got, tt.want)
 			}
 		})

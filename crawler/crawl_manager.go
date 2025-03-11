@@ -87,7 +87,7 @@ func (cm *CrawlManager) GenerateReport(printToConsole bool) map[string]any {
 		fmt.Println("Run report:")
 		fmt.Printf("Total processed URLs:\t%v\n", report["totalProcessed"])
 		fmt.Printf("Error rate:\t%v\n", report["errorRate"])
-		fmt.Printf("Average response time:\t%v\n", report["averageResponseTime"])
+		fmt.Printf("Average response time:\t%vs\n", cm.runningAverage/1000.0)
 		fmt.Println("#####################################################")
 	}
 	return report
@@ -97,48 +97,3 @@ func (cm *CrawlManager) ShutdownCrawls() {
 	defer cm.mu.Unlock()
 	cm.ReceivedShutdownSignal = true
 }
-
-//func NewCrawlManager(maxConcurrentGoroutines int) *CrawlManager {
-
-//	return &CrawlManager{
-//		maxConcurrentGoroutines: maxConcurrentGoroutines,
-//		metricResponseTimes:     make([]float64, 0),
-//		avgResponseTime:         0.0,
-//	}
-//}
-
-//func (c *CrawlManager) Run() {
-//	var wg sync.WaitGroup
-//	for i := 0; i < c.maxConcurrentGoroutines; i++ {
-//		wg.Add(1)
-//		go func() {
-//			defer wg.Done()
-//			c.processTasks()
-//		}()
-//	}
-//	wg.Wait()
-//}
-//
-//func (c *CrawlManager) processTasks() {
-//	// Simulate some work
-//	time.Sleep(time.Second)
-//
-//	// Update the average response time metric
-//	c.updateMetricResponseTimes(1.0)
-//}
-//
-//func (c *CrawlManager) updateMetricResponseTimes(responseTime float64) {
-//	c.metricResponseTimes = append(c.metricResponseTimes, responseTime)
-//	if len(c.metricResponseTimes) > 10 {
-//		c.metricResponseTimes = c.metricResponseTimes[1:]
-//	}
-//	c.avgResponseTime = calculateAverage(c.metricResponseTimes...)
-//}
-//
-//func calculateAverage(vals ...float64) float64 {
-//	sum := 0.0
-//	for _, val := range vals {
-//		sum += val
-//	}
-//	return sum / len(vals)
-//}

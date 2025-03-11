@@ -32,7 +32,8 @@ func main() {
 	pipelineCompletionChan := make(chan bool, 1)
 	signal.Notify(sigChan, os.Interrupt, os.Kill)
 
-	readerChan := make(chan *models.Resource, 50) // 50 here indicates the number of rows loaded into memory at any instant.
+	// Create a buffered channel to control the amount of data loaded into the memory at once.
+	readerChan := make(chan *models.Resource, 50)
 	writerChan := make(chan *models.ResourceData)
 
 	var mappings *hashset.Set
@@ -75,7 +76,7 @@ func main() {
 	// Crawler : Crawls the resource.
 	// Additionally, uses a manager to track the active goroutines and metrics.
 	crawlManager := &crawler.CrawlManager{AvailableGoroutines: *numCrawlers}
-	crawlerInstance, err := crawler.GetCrawler("http", crawlManager)
+	crawlerInstance, err := crawler.GetCrawler("http", crawlManager, nil)
 	if err != nil {
 		log.Fatal().Msg("failed to create the crawler")
 		os.Exit(1)

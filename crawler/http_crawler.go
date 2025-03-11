@@ -12,15 +12,19 @@ import (
 )
 
 type HttpCrawler struct {
-	cm *CrawlManager
+	HttpClient *http.Client
+	cm         *CrawlManager
 }
 
-func getHttpCrawler(cm *CrawlManager) Crawler {
-	return &HttpCrawler{cm: cm}
+func getHttpCrawler(cm *CrawlManager, client *http.Client) Crawler {
+	if client == nil {
+		client = http.DefaultClient
+	}
+	return &HttpCrawler{cm: cm, HttpClient: client}
 }
 
 func (crawlerInstance *HttpCrawler) crawl(resource *models.Resource, outChan chan *models.ResourceData) {
-	start := time.Now().Unix()
+	start := time.Now().UnixMilli()
 
 	var requestAddress string
 	if strings.HasPrefix(resource.ResourceAddress, "http") {
@@ -28,7 +32,7 @@ func (crawlerInstance *HttpCrawler) crawl(resource *models.Resource, outChan cha
 	} else {
 		requestAddress = fmt.Sprintf("http://%s", resource.ResourceAddress)
 	}
-	resp, err := http.Get(requestAddress)
+	resp, err := crawlerInstance.HttpClient.Get(requestAddress)
 
 	if err != nil {
 		log.Warn().Err(err).Str("url", requestAddress).Msg("url crawl failed")
@@ -45,7 +49,7 @@ func (crawlerInstance *HttpCrawler) crawl(resource *models.Resource, outChan cha
 		crawlerInstance.cm.RecordFailure()
 		return
 	}
-	end := time.Now().Unix()
+	end := time.Now().UnixMilli()
 	crawlerInstance.cm.UpdateRunningAverage(end - start)
 	crawlerInstance.cm.RecordSuccess()
 

@@ -15,9 +15,19 @@ type FileWriter struct {
 }
 
 func getFileWriter(opts map[string]any) Writer {
+	targetDirectory, ok := opts["targetDirectory"].(string)
+	if !ok {
+		log.Warn().Any("opts", opts).Msg("Invalid opts")
+		targetDirectory = "resources"
+	}
+
+	truncateMappings, ok := opts["truncateMappings"].(bool)
+	if !ok {
+		log.Warn().Any("opts", opts).Msg("Invalid opts")
+	}
 	return &FileWriter{
-		TargetDirectory:  opts["targetDirectory"].(string),
-		TruncateMappings: opts["truncateMappings"].(bool),
+		TargetDirectory:  targetDirectory,
+		TruncateMappings: truncateMappings,
 	}
 }
 
@@ -29,7 +39,7 @@ func (writerInstance *FileWriter) ExecuteWrite(inChan chan *models.ResourceData)
 	} else {
 		mappingFileMode = os.O_RDWR | os.O_CREATE | os.O_APPEND
 	}
-	mappingFile, err := os.OpenFile(fmt.Sprintf("./%s/mapping.csv", writerInstance.TargetDirectory), mappingFileMode, 0644)
+	mappingFile, err := os.OpenFile(fmt.Sprintf("%s/mapping.csv", writerInstance.TargetDirectory), mappingFileMode, 0644)
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to create mapping file. resumption will not be possible")
 		return false
@@ -45,42 +55,18 @@ func (writerInstance *FileWriter) ExecuteWrite(inChan chan *models.ResourceData)
 
 	for resource := range inChan {
 		resourceIdentifier := uuid.New().String()
-		resourceFile, resourceError := os.OpenFile(fmt.Sprintf("./%s/%s.txt", writerInstance.TargetDirectory, resourceIdentifier), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		resourceFile, resourceError := os.OpenFile(fmt.Sprintf("%s/%s.txt", writerInstance.TargetDirectory, resourceIdentifier), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if resourceError != nil {
 			log.Error().Err(resourceError).Msg("failed to create resource file.")
 		}
 		if resourceFile != nil {
 			resourceFile.Write(resource.Data)
 			resourceFile.Close()
-		}
 
-		if mappingFile != nil {
-			mappingFile.WriteString(fmt.Sprintf("%s,%s\n", resource.ResourceAddress, resourceIdentifier))
+			if mappingFile != nil {
+				mappingFile.WriteString(fmt.Sprintf("%s,%s\n", resource.ResourceAddress, resourceIdentifier))
+			}
 		}
 	}
 	return true
-
-	//for {
-	//	select {
-	//	case resource, ok := <-inChan:
-	//		if !ok {
-	//			log.Info().Msg("all resources saved. pipeline completed.")
-	//			return false
-	//		}
-	//		resourceIdentifier := uuid.New().String()
-	//		resourceFile, resourceError := os.OpenFile(fmt.Sprintf("./%s/%s.txt", writerInstance.TargetDirectory, resourceIdentifier), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	//		if resourceError != nil {
-	//			log.Error().Err(resourceError).Msg("failed to create resource file.")
-	//		}
-	//		if resourceFile != nil {
-	//			resourceFile.Write(resource.Data)
-	//			resourceFile.Close()
-	//		}
-	//
-	//		if mappingFile != nil {
-	//			mappingFile.WriteString(fmt.Sprintf("%s,%s\n", resource.ResourceAddress, resourceIdentifier))
-	//		}
-	//	}
-	//}
-	//return true
 }
