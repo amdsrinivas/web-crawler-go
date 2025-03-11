@@ -87,6 +87,7 @@ func (crawlerInstance *HttpCrawler) ExecuteCrawl(inChan chan *models.Resource, o
 			}()
 		} else {
 			// This needs to be fine-tuned in the production setting.
+			// If no goroutine is available, wait for 1 second before trying again.
 			time.Sleep(1 * time.Second)
 		}
 	}

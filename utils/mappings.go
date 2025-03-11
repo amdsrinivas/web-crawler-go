@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// BuildExistingMappings Builds a hashset from an existing mapping file.
 func BuildExistingMappings(mappingFilePath string) *hashset.Set {
 	mappings := hashset.New()
 	mappingFile, err := os.Open(mappingFilePath)

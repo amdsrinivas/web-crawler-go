@@ -32,7 +32,10 @@ func getFileWriter(opts map[string]any) Writer {
 }
 
 func (writerInstance *FileWriter) ExecuteWrite(inChan chan *models.ResourceData) bool {
+	// Create target directory.
 	os.MkdirAll(writerInstance.TargetDirectory, 0777)
+
+	// Identify mapping file which keeps track of processed URLs.
 	var mappingFileMode int
 	if writerInstance.TruncateMappings {
 		mappingFileMode = os.O_RDWR | os.O_CREATE | os.O_TRUNC
@@ -44,6 +47,7 @@ func (writerInstance *FileWriter) ExecuteWrite(inChan chan *models.ResourceData)
 		log.Warn().Err(err).Msg("failed to create mapping file. resumption will not be possible")
 		return false
 	}
+
 	if mappingFile != nil {
 		defer mappingFile.Close()
 
@@ -53,6 +57,7 @@ func (writerInstance *FileWriter) ExecuteWrite(inChan chan *models.ResourceData)
 		}
 	}
 
+	// Process the URLs
 	for resource := range inChan {
 		resourceIdentifier := uuid.New().String()
 		resourceFile, resourceError := os.OpenFile(fmt.Sprintf("%s/%s.txt", writerInstance.TargetDirectory, resourceIdentifier), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
@@ -63,6 +68,7 @@ func (writerInstance *FileWriter) ExecuteWrite(inChan chan *models.ResourceData)
 			resourceFile.Write(resource.Data)
 			resourceFile.Close()
 
+			// Add the processed resource to the processed mappings file.
 			if mappingFile != nil {
 				mappingFile.WriteString(fmt.Sprintf("%s,%s\n", resource.ResourceAddress, resourceIdentifier))
 			}

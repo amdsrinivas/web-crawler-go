@@ -1,5 +1,11 @@
 package crawler
 
+/*
+	CrawlManager is a construct developed to
+		1. Co-ordinate between crawl workers,
+		2. Aggregate metrics and
+		3. Manage the crawl process (Shutdown and system limits).
+*/
 import (
 	"errors"
 	"fmt"

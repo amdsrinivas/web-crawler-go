@@ -14,6 +14,8 @@ var writerTypes = map[string]func(map[string]any) Writer{
 	"file": getFileWriter,
 }
 
+// GetWriter
+// Factory function to configure different types of writers.
 func GetWriter(writerType string, opts map[string]any) (Writer, error) {
 	getWriterFunc, found := writerTypes[writerType]
 	if !found {
